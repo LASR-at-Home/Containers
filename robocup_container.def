@@ -32,6 +32,10 @@ apt upgrade -y
 # python3-opencv: provides cv2 for python3
 apt install ros-melodic-audio-common python3-numpy python3-opencv -y
 
+# Install Node.js v16.x
+curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+sudo apt-get install -y nodejs
+
 # Additional Python packages
 #
 # rosnumpy: conversion helper between ROS and numpy
@@ -43,7 +47,7 @@ mkdir /deps
 
 
 ##
-## Install Python 3.8 from source
+## Install Python 3.10 from source
 ## 
 ## We install from source as it's not available in PAL repositories and Python
 ## is no longer available from the deadsnakes PPA as Ubuntu 18 has lost support.
@@ -85,6 +89,11 @@ make install
 # wheel: Python build tools
 python3.10 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
   pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
+
+
+##
+## Configure global Python installation
+##
 
 # Reconfigure the /usr/bin/python symlink
 unlink /usr/bin/python

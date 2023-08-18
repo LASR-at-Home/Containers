@@ -1,2 +1,5 @@
 # Built containers
 *.sif
+
+# Logs
+*.log
