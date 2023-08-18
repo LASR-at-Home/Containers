@@ -107,7 +107,14 @@ alias catkin='PATH="/path/python3.10:$PATH" /usr/bin/catkin '
 
 # Create workspace
 source /opt/ros/melodic/setup.bash
-source /opt/pal/ferrum/setup.bash
+# PAL container
+if [ -f "/opt/pal/ferrum/setup.bash" ]; then
+    source /opt/pal/ferrum/setup.bash
+# Opensource container
+else
+    source /opt/tiago_public_ws/devel/setup.bash
+fi
+
 mkdir -p /overlay_ws/src
 
 # Clone catkin_virtualenv
@@ -124,8 +131,14 @@ PATH="/path/python3.10:$PATH" catkin build
 #
 # This updates /opt/env.sh which is executed on container start,
 # this will source the overlay workspace straight after the PAL workspace
-sed -i '/source \/opt\/pal\/ferrum\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
-sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+# PAL container
+if [ -f "/opt/pal/ferrum/setup.bash" ]; then
+    sed -i '/source \/opt\/pal\/ferrum\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+# Opensource container
+else
+    sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+fi
+
 
 ##
 ## Clean up
