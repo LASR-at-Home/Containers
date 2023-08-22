@@ -2,11 +2,6 @@
 ## RoboCup / LASR-Base Container
 ## Based on TIAGo PAL Melodic container
 ##
-## Build container:
-## - Copy tiago_pal_melodic.sif into current directory or update From path
-## - Run build command:
-##   sudo apptainer build robocup_container.sif robocup_container.def
-##
 
 
 Bootstrap: localimage
@@ -26,12 +21,6 @@ apt update
 apt upgrade -y
 
 # Additional apt packages
-#
-# ros-melodic-audio-common: used for capturing audio
-# python3-numpy: provides numpy for python3
-# python3-opencv: provides cv2 for python3
-# libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev: libraries for audio I/O
-# ffmpeg: record, convert, and stream audio and video
 apt install ros-melodic-audio-common python3-numpy python3-opencv libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg -y
 
 # Install Node.js v16.x
@@ -39,9 +28,6 @@ curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 sudo apt-get install -y nodejs
 
 # Additional Python packages
-#
-# rosnumpy: conversion helper between ROS and numpy
-# scipy: mathematics library
 python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4
 
 # Prepare folder for installing additional dependencies from source
@@ -50,19 +36,6 @@ mkdir /deps
 
 ##
 ## Install Python 3.10 from source
-## 
-## We install from source as it's not available in PAL repositories and Python
-## is no longer available from the deadsnakes PPA as Ubuntu 18 has lost support.
-## When migrating this build step to noetic, you may be albe to just use the
-## deadsnakes repository like:
-##
-## apt install software-properties-common -y && apt-add-repository ppa:deadsnakes/ppa \
-##  && apt update && apt install python3.8 python3.8-dev python3-setuptools [.. etc]
-##
-## This is used for various virtual environments in the LASR repository.
-##
-## WARNING: Python 3.11+ appears to be incompatible with rospy from melodic!
-## WARNING: Python releases from PAL repositories are quite old.
 ##
 
 # Dependencies for Python build (we want all optional modules)
@@ -83,12 +56,6 @@ make -s -j$(nproc)
 make install
 
 # Install additional global packages
-#
-# pyyaml: provides yaml package required for catkin_virtualenv and rospy
-# rospkg: provides utilities required by rospy
-# pip: Python package manager
-# setuptools: Python build tools
-# wheel: Python build tools
 python3.10 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
   pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
 
@@ -97,19 +64,15 @@ python3.10 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
 ## Configure global Python installation
 ##
 
-# Reconfigure the /usr/bin/python symlink
+# Reconfigure Python symlinks
 unlink /usr/bin/python
 ln -s /usr/bin/python2.7 /usr/bin/python
 unlink /usr/local/bin/python3
 
 # Force catkin to use Python 3.10
-#
-# We build a new PATH variable which overrides python3
-# when invoking catkin so that catkin_virtualenv works
 mkdir -p /path/python3.10
 ln -s /usr/local/bin/python3.10 /path/python3.10/python3
 alias catkin='PATH="/path/python3.10:$PATH" /usr/bin/catkin '
-# We only want to override catkin build so this should be sufficient
 
 
 ##
