@@ -1,0 +1,12 @@
+##
+## Staging Container
+## Based on RoboCup Container
+##
+
+
+Bootstrap: localimage
+From: ./robocup_container.sif
+
+%post -c /bin/bash
+
+# Add commands here to test propspective changes:
