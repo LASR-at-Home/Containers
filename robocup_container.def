@@ -27,22 +27,44 @@ apt install ros-melodic-audio-common python3-numpy python3-opencv libasound-dev 
 curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 sudo apt-get install -y nodejs
 
-# Additional Python packages
-python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4 black==22.8.0 scikit-build==0.16.7 scikit-learn==0.24.2 nvidia-ml-py3==7.352.0
-python3.6 -m pip install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
-
 # Prepare folder for installing additional dependencies from source
 mkdir /deps
+
+
+###
+### Install alternative Python versions from source
+###
+
+# Dependencies for Python builds (we want all optional modules)
+apt install -y build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev \
+  libgdbm-compat-dev liblzma-dev libncurses5-dev libreadline6-dev libsqlite3-dev \
+  libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+
+
+##
+## Install Python 3.8 from source
+##
+
+# Download sources and extract
+PYTHON_VERSION=3.8.9
+cd /deps
+wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+tar zxvf Python-$PYTHON_VERSION.tgz
+cd Python-$PYTHON_VERSION
+
+# Build and install
+./configure --with-pydebug --with-ensurepip=install
+make -s -j$(nproc)
+make install
+
+# Install additional global packages
+python3.8 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
+  pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
 
 
 ##
 ## Install Python 3.10 from source
 ##
-
-# Dependencies for Python build (we want all optional modules)
-apt install -y build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev \
-  libgdbm-compat-dev liblzma-dev libncurses5-dev libreadline6-dev libsqlite3-dev \
-  libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
 
 # Download sources and extract
 PYTHON_VERSION=3.10.9
@@ -74,6 +96,10 @@ unlink /usr/local/bin/python3
 mkdir -p /path/python3.10
 ln -s /usr/local/bin/python3.10 /path/python3.10/python3
 alias catkin='PATH="/path/python3.10:$PATH" /usr/bin/catkin '
+
+# Additional Python packages
+python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4 black==22.8.0 scikit-build==0.16.7 scikit-learn==0.24.2 nvidia-ml-py3==7.352.0
+python3.6 -m pip install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 
 ##
