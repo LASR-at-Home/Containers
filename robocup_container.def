@@ -93,10 +93,18 @@ fi
 mkdir -p /overlay_ws/src
 
 # Clone catkin_virtualenv
-git clone --depth 1 https://github.com/locusrobotics/catkin_virtualenv /overlay_ws/src/catkin_virtualenv
+git clone https://github.com/locusrobotics/catkin_virtualenv /overlay_ws/src/catkin_virtualenv
 cd /overlay_ws/src/catkin_virtualenv
 git reset --hard 4af99703e6c7faf12c5d328dbab346250fd085f7
 git clean -df
+git fetch --depth=1
+
+# Clone video_stream_opencv
+git clone https://github.com/ros-drivers/video_stream_opencv /overlay_ws/src/video_stream_opencv
+cd /overlay_ws/src/video_stream_opencv
+git reset --hard 65949bdc5c9468d18c51aed9073d020bec892532
+git clean -df
+git fetch --depth=1
 
 # Build workspace (ensure Python 3.10 is used)
 cd /overlay_ws
