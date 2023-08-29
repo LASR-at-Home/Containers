@@ -58,7 +58,7 @@ make -s -j$(nproc)
 make install
 
 # Install additional global packages
-python3.8 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
+python3.9 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
   pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
 
 
