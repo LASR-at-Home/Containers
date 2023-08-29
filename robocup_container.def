@@ -42,11 +42,11 @@ apt install -y build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm
 
 
 ##
-## Install Python 3.8 from source
+## Install Python 3.9 from source
 ##
 
 # Download sources and extract
-PYTHON_VERSION=3.8.9
+PYTHON_VERSION=3.9.18
 cd /deps
 wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
 tar zxvf Python-$PYTHON_VERSION.tgz
