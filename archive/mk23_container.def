@@ -1,19 +1,15 @@
 ##
-## RoboCup / LASR-Base Container
-## Based on TIAGo OSS Noetic container
-##
-## PAL proprietary container support untested
-##                            (likely broken)
+## Milton Keynes (2023) / LASR-Base Container
+## Based on TIAGo PAL Melodic container
 ##
 
 
 Bootstrap: localimage
-From: ./tiago_noetic_opensource.sif
+From: ./tiago_pal_melodic.sif
 
 %post -c /bin/bash
 echo $ROS_PACKAGE_PATH $ROS_DISTRO
 unset ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO
-START=$(date +%s.%N)
 
 
 ##
@@ -25,14 +21,11 @@ apt update
 apt upgrade -y
 
 # Additional apt packages
-apt install ros-noetic-audio-common python3-numpy python3-opencv python3-testresources python3-empy libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc -y
+apt install ros-melodic-audio-common python3-numpy python3-opencv libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg -y
 
-# Install Node.js v20.x (LTS)
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-NODE_MAJOR=20 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-sudo apt-get update
-sudo apt-get install nodejs npm -y
+# Install Node.js v16.x
+curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+sudo apt-get install -y nodejs
 
 # Prepare folder for installing additional dependencies from source
 mkdir /deps
@@ -96,12 +89,17 @@ python3.10 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
 
 # Reconfigure Python symlinks
 unlink /usr/bin/python
-ln -s /usr/bin/python3.8 /usr/bin/python
+ln -s /usr/bin/python2.7 /usr/bin/python
 unlink /usr/local/bin/python3
 
+# Force catkin to use Python 3.10
+mkdir -p /path/python3.10
+ln -s /usr/local/bin/python3.10 /path/python3.10/python3
+alias catkin='PATH="/path/python3.10:$PATH" /usr/bin/catkin '
+
 # Additional Python packages
-# python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4 black==22.8.0 scikit-build==0.16.7 scikit-learn==0.24.2 nvidia-ml-py3==7.352.0 sounddevice==0.4.4 soundfile==0.12.1 pyaudio==0.2.13
-# python3.6 -m pip install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
+python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4 black==22.8.0 scikit-build==0.16.7 scikit-learn==0.24.2 nvidia-ml-py3==7.352.0 sounddevice==0.4.4 soundfile==0.12.1 pyaudio==0.2.13
+python3.6 -m pip install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 
 ##
@@ -109,7 +107,7 @@ unlink /usr/local/bin/python3
 ##
 
 # Create workspace
-source /opt/ros/noetic/setup.bash
+source /opt/ros/melodic/setup.bash
 # PAL container
 if [ -f "/opt/pal/ferrum/setup.bash" ]; then
     source /opt/pal/ferrum/setup.bash
@@ -134,9 +132,9 @@ git reset --hard 65949bdc5c9468d18c51aed9073d020bec892532
 git clean -df
 git fetch --depth=1
 
-# Build workspace
+# Build workspace (ensure Python 3.10 is used)
 cd /overlay_ws
-catkin build
+PATH="/path/python3.10:$PATH" catkin build
 
 # Ensure workspace is loaded on container start
 #
@@ -144,11 +142,9 @@ catkin build
 # this will source the overlay workspace straight after the PAL workspace
 # PAL container
 if [ -f "/opt/pal/ferrum/setup.bash" ]; then
-    BASE=pal
     sed -i '/source \/opt\/pal\/ferrum\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
 # Opensource container
 else
-    BASE=oss
     sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
 fi
 
@@ -160,13 +156,5 @@ fi
 # Remove build folder
 rm -r /deps
 
-# Capture build information
-VERSION=0001
-BUILD_DATE=$(date)
-END=$(date +%s.%N)
-DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
-BUILD_TIME=$(date -ud "@$DIFF" +"$(( $DIFF/3600/24 )) days %H hours %M minutes %S seconds")
-echo "RoboCup Container (Version: $VERSION, Bootstrapped from: $BASE, Build date: $BUILD_DATE, Build took: $BUILD_TIME)" >> /.build_info
-
 # Unset variables
-unset PYTHON_VERSION ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO START END BASE BUILD_DATE END DIFF BUILD_TIME 
+unset PYTHON_VERSION ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO
