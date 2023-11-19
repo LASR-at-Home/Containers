@@ -99,9 +99,13 @@ unlink /usr/bin/python
 ln -s /usr/bin/python3.8 /usr/bin/python
 unlink /usr/local/bin/python3
 
-# Additional Python packages
-# python3.6 -m pip install rosnumpy==0.0.5.2 scipy==1.5.4 black==22.8.0 scikit-build==0.16.7 scikit-learn==0.24.2 nvidia-ml-py3==7.352.0 sounddevice==0.4.4 soundfile==0.12.1 pyaudio==0.2.13
-# python3.6 -m pip install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html
+# Additional Python packages (stuff we want to preload + commonly need)
+python3.8 -m pip install scipy==1.10.1
+python3.9 -m pip install tensorflow==2.14.0
+python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78
+python3.8 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
+python3.9 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
+python3.10 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
 
 
 ##
@@ -161,7 +165,7 @@ fi
 rm -r /deps
 
 # Capture build information
-VERSION=0001
+VERSION=0002
 BUILD_DATE=$(date)
 END=$(date +%s.%N)
 DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
