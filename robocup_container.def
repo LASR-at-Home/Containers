@@ -3,7 +3,6 @@
 ## Based on TIAGo OSS Noetic container
 ##
 ## PAL proprietary container support untested
-##                            (likely broken)
 ##
 
 
@@ -147,9 +146,9 @@ catkin build
 # This updates /opt/env.sh which is executed on container start,
 # this will source the overlay workspace straight after the PAL workspace
 # PAL container
-if [ -f "/opt/pal/ferrum/setup.bash" ]; then
+if [ -f "/opt/pal/gallium/setup.bash" ]; then
     BASE=pal
-    sed -i '/source \/opt\/pal\/ferrum\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+    sed -i '/source \/opt\/pal\/gallium\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
 # Opensource container
 else
     BASE=oss
@@ -165,7 +164,7 @@ fi
 rm -r /deps
 
 # Capture build information
-VERSION=0002
+VERSION=0003
 BUILD_DATE=$(date)
 END=$(date +%s.%N)
 DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
