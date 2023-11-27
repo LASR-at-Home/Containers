@@ -114,8 +114,8 @@ python3.10 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c
 # Create workspace
 source /opt/ros/noetic/setup.bash
 # PAL container
-if [ -f "/opt/pal/ferrum/setup.bash" ]; then
-    source /opt/pal/ferrum/setup.bash
+if [ -f "/opt/pal/gallium/setup.bash" ]; then
+    source /opt/pal/gallium/setup.bash
 # Opensource container
 else
     source /opt/tiago_public_ws/devel/setup.bash
