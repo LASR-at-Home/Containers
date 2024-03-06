@@ -7,5 +7,21 @@ Bootstrap: localimage
 From: ./robocup_container.sif
 
 %post -c /bin/bash
+START=$(date +%s.%N)
 
 # Add commands here to test propspective changes:
+
+# Commands end here.
+
+# Capture build information
+# (this is to keep track of layering changes)
+VERSION=0005
+BUILD_DATE=$(date)
+END=$(date +%s.%N)
+DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
+BUILD_TIME=$(date -ud "@$DIFF" +"$(( $DIFF/3600/24 )) days %H hours %M minutes %S seconds")
+echo "RoboCup Container (Version: $VERSION, Bootstrapped from container listed above, Build date: $BUILD_DATE, Build took: $BUILD_TIME)" >> /.build_info
+
+# Unset variables
+unset PYTHON_VERSION ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO START END BASE BUILD_DATE END DIFF BUILD_TIME 
+
