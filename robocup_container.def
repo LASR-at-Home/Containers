@@ -99,9 +99,9 @@ ln -s /usr/bin/python3.8 /usr/bin/python
 unlink /usr/local/bin/python3
 
 # Additional Python packages (stuff we want to preload + commonly need)
-python3.8 -m pip install --ignore-installed scipy==1.10.1 open3d==0.17.0 point-cloud-utils==0.30.0 shapely==2.0.3
-python3.9 -m pip install tensorflow==2.14.0 shapely==2.0.3
-python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78 shapely==2.0.3
+python3.8 -m pip install --ignore-installed scipy==1.10.1 open3d==0.17.0 point-cloud-utils==0.30.0 shapely==2.0.3 pykalman==0.9.7
+python3.9 -m pip install tensorflow==2.14.0 shapely==2.0.3 pykalman==0.9.7
+python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78 shapely==2.0.3 pykalman==0.9.7
 python3.8 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
 python3.9 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
 python3.10 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
