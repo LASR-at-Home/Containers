@@ -173,3 +173,39 @@ echo "RoboCup Container (Version: $VERSION, Bootstrapped from: $BASE, Build date
 
 # Unset variables
 unset PYTHON_VERSION ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO START END BASE BUILD_DATE END DIFF BUILD_TIME 
+
+%runscript
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    export TIAGO_ROBOT="tiago-157c";
+    echo -e "\e[1;31mNo tiago robot specified.\e[0m Using default $TIAGO_ROBOT."
+else
+    export TIAGO_ROBOT="$1"
+    if [[ $TIAGO_ROBOT = "rexy" || $TIAGO_ROBOT = "rex" || $TIAGO_ROBOT = "157c" || $TIAGO_ROBOT = "gerard" ]]; then
+      export TIAGO_ROBOT="tiago-157c";
+    elif [[ $TIAGO_ROBOT = "local" || $TIAGO_ROBOT = "roslocal" ]]; then
+      export TIAGO_ROBOT="localhost";
+    elif [[ $TIAGO_ROBOT = "matteo" || $TIAGO_ROBOT = "144c" || $TIAGO_ROBOT = "frutty"  || $TIAGO_ROBOT = "matish"  || $TIAGO_ROBOT = "mattish" ]]; then
+      export TIAGO_ROBOT="tiago-144c";
+    fi
+fi
+#echo -e "\e[1;31mSetting up connection to \e[30m\e[1;103m$TIAGO_ROBOT\e[1m.\e[0m"
+
+[[ "$(find /tmp/.tiago_container_update_check -mmin +720 2>/dev/null)" ]] && rm /tmp/.tiago_container_update_check # Remove the lock file if older than 12h. From https://stackoverflow.com/questions/552724/how-do-i-check-in-bash-whether-a-file-was-created-more-than-x-time-ago
+if [[ ! -f "/tmp/.tiago_container_update_check" ]]; then
+    echo "Checking for updates to the $(basename $SINGULARITY_CONTAINER) container..."
+    bash /opt/check_md5.sh
+    touch /tmp/.tiago_container_update_check
+fi
+
+
+if [[ $TIAGO_ROBOT = "terminator" ]]; then
+  export TIAGO_ROBOT="localhost";
+  echo "Running terminator. This terminal will be unresponsive until terminator is closed."
+  exec terminator -u --config /opt/terminator_config --title "TIAGo Gallium Apptainer" &>/dev/null
+elif [[ $2 = "terminator" ]]; then
+  echo "Running terminator. This terminal will be unresponsive until terminator is closed."
+  exec terminator -u --config /opt/terminator_config --title "TIAGo Gallium Apptainer" &>/dev/null
+else
+  exec bash --init-file /opt/env.sh
+fi
