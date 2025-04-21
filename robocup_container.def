@@ -7,7 +7,7 @@
 
 
 Bootstrap: localimage
-From: ./tiago_noetic_opensource.sif
+From: ./tiago_pal_noetic.sif
 
 %post -c /bin/bash
 echo $ROS_PACKAGE_PATH $ROS_DISTRO
@@ -99,6 +99,7 @@ ln -s /usr/bin/python3.8 /usr/bin/python
 unlink /usr/local/bin/python3
 
 # Additional Python packages (stuff we want to preload + commonly need)
+python3 -m pip install pykalman==0.9.7
 python3.8 -m pip install --ignore-installed scipy==1.10.1 open3d==0.17.0 point-cloud-utils==0.30.0 shapely==2.0.3 pykalman==0.9.7
 python3.9 -m pip install tensorflow==2.14.0 shapely==2.0.3 pykalman==0.9.7
 python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78 shapely==2.0.3 pykalman==0.9.7
@@ -154,6 +155,15 @@ else
     BASE=oss
     sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
 fi
+
+# GPD
+cd /opt/
+git clone https://github.com/LASR-at-Home/gpd.git
+cd gpd
+mkdir build && cd build
+cmake ..
+make -j
+make install
 
 
 ##
