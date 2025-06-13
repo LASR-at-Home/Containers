@@ -1,175 +1,108 @@
 ##
 ## RoboCup / LASR-Base Container
-## Based on TIAGo OSS Noetic container
+## Based on TIAGo PAL Noetic container
 ##
-## PAL proprietary container support untested
-##
-
 
 Bootstrap: localimage
-From: ./tiago_noetic_opensource.sif
+From: ./tiago_pal_noetic.sif
 
 %post -c /bin/bash
-echo $ROS_PACKAGE_PATH $ROS_DISTRO
-unset ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO
+
+set -e
+
 START=$(date +%s.%N)
 
+install_system_packages() {
+    apt update && apt upgrade -y
+    apt install -y \
+        python3-numpy python3-opencv python3-testresources python3-empy python3-pykdl \
+        libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc \
+        build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+}
 
-##
-## Install packages and prepare container
-##
+install_python_from_source() {
+    local ver=$1
+    cd /deps
+    wget https://www.python.org/ftp/python/$ver/Python-$ver.tgz
+    tar zxvf Python-$ver.tgz
+    cd Python-$ver
+    ./configure --with-pydebug --with-ensurepip=install
+    make -s -j$(nproc)
+    make install
+    python${ver%.*} -m pip install \
+        pyyaml==6.0.1 rospkg==1.5.0 pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
+}
 
-# Ensure container is up to date
-apt update
-apt upgrade -y
+install_global_python_packages() {
+    python3.8 -m pip install --ignore-installed scipy==1.10.1 open3d==0.17.0 point-cloud-utils==0.30.0 shapely==2.0.3 pykalman==0.9.7
+    python3.9 -m pip install tensorflow==2.14.0 shapely==2.0.3 pykalman==0.9.7
+    python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78 shapely==2.0.3 pykalman==0.9.7
+    python3.12 -m pip install torch==2.7.1 torchvision==0.22.1
+    for py in 3.8 3.9 3.10 3.12; do
+        python$py -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
+    done
+}
 
-# Additional apt packages
-apt install ros-noetic-audio-common python3-numpy python3-opencv python3-testresources python3-empy python3-pykdl libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc -y
+setup_overlay_ws() {
+    source /opt/ros/noetic/setup.bash
+    if [ -f "/opt/pal/gallium/setup.bash" ]; then
+        source /opt/pal/gallium/setup.bash
+    else
+        source /opt/tiago_public_ws/devel/setup.bash
+    fi
 
-# Install Node.js v20.x (LTS)
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-NODE_MAJOR=20 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
-sudo apt-get update
-sudo apt-get install nodejs npm -y
+    mkdir -p /overlay_ws/src
 
-# Prepare folder for installing additional dependencies from source
+    git clone https://github.com/LASR-at-Home/catkin_virtualenv /overlay_ws/src/catkin_virtualenv
+
+    git clone https://github.com/ros-drivers/video_stream_opencv /overlay_ws/src/video_stream_opencv
+    cd /overlay_ws/src/video_stream_opencv
+    git reset --hard 65949bdc5c9468d18c51aed9073d020bec892532
+    git clean -df
+    git fetch --depth=1
+
+    cd /overlay_ws
+    catkin build
+
+    if [ -f "/opt/pal/gallium/setup.bash" ]; then
+        sed -i '/source \/opt\/pal\/gallium\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+    else
+        sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
+    fi
+
+}
+
+link_python_versions() {
+    unlink /usr/bin/python || true
+    ln -s /usr/bin/python3.8 /usr/bin/python
+    unlink /usr/local/bin/python3 || true
+}
+
+finish() {
+    rm -rf /deps
+
+    VERSION=0005
+    BUILD_DATE=$(date)
+    END=$(date +%s.%N)
+    DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
+    BUILD_TIME=$(date -ud "@$DIFF" +"$(( $DIFF/3600/24 )) days %H hours %M minutes %S seconds")
+    BASE=$( [ -f "/opt/pal/gallium/setup.bash" ] && echo "pal" || echo "oss" )
+    echo "RoboCup Container (Version: $VERSION, Bootstrapped from: $BASE, Build date: $BUILD_DATE, Build took: $BUILD_TIME)" >> /.build_info
+}
+
+unset ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO
+
 mkdir /deps
 
+install_system_packages
 
-###
-### Install alternative Python versions from source
-###
+install_python_from_source 3.9.18
+install_python_from_source 3.10.9
+install_python_from_source 3.12.3
 
-# Dependencies for Python builds (we want all optional modules)
-apt install -y build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev \
-  libgdbm-compat-dev liblzma-dev libncurses5-dev libreadline6-dev libsqlite3-dev \
-  libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+install_global_python_packages
+link_python_versions
+setup_overlay_ws
+finish
 
-
-##
-## Install Python 3.9 from source
-##
-
-# Download sources and extract
-PYTHON_VERSION=3.9.18
-cd /deps
-wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
-tar zxvf Python-$PYTHON_VERSION.tgz
-cd Python-$PYTHON_VERSION
-
-# Build and install
-./configure --with-pydebug --with-ensurepip=install
-make -s -j$(nproc)
-make install
-
-# Install additional global packages
-python3.9 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
-  pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
-
-
-##
-## Install Python 3.10 from source
-##
-
-# Download sources and extract
-PYTHON_VERSION=3.10.9
-cd /deps
-wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
-tar zxvf Python-$PYTHON_VERSION.tgz
-cd Python-$PYTHON_VERSION
-
-# Build and install
-./configure --with-pydebug --with-ensurepip=install
-make -s -j$(nproc)
-make install
-
-# Install additional global packages
-python3.10 -m pip install pyyaml==6.0.1 rospkg==1.5.0 \
-  pip==23.2.1 setuptools==68.0.0 wheel==0.41.1
-
-
-##
-## Configure global Python installation
-##
-
-# Reconfigure Python symlinks
-unlink /usr/bin/python
-ln -s /usr/bin/python3.8 /usr/bin/python
-unlink /usr/local/bin/python3
-
-# Additional Python packages (stuff we want to preload + commonly need)
-python3.8 -m pip install --ignore-installed scipy==1.10.1 open3d==0.17.0 point-cloud-utils==0.30.0 shapely==2.0.3 pykalman==0.9.7
-python3.9 -m pip install tensorflow==2.14.0 shapely==2.0.3 pykalman==0.9.7
-python3.10 -m pip install torch==2.1.0 torchvision==0.16.0 opencv-python==4.8.1.78 shapely==2.0.3 pykalman==0.9.7
-python3.8 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
-python3.9 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
-python3.10 -m pip install git+https://github.com/eric-wieser/ros_numpy@74879737c8648f48adb507a5bdf4e51c0d194124
-
-
-##
-## Configure overlay workspace with additional packages
-##
-
-# Create workspace
-source /opt/ros/noetic/setup.bash
-# PAL container
-if [ -f "/opt/pal/gallium/setup.bash" ]; then
-    source /opt/pal/gallium/setup.bash
-# Opensource container
-else
-    source /opt/tiago_public_ws/devel/setup.bash
-fi
-
-mkdir -p /overlay_ws/src
-
-# Clone catkin_virtualenv
-git clone https://github.com/locusrobotics/catkin_virtualenv /overlay_ws/src/catkin_virtualenv
-cd /overlay_ws/src/catkin_virtualenv
-git reset --hard 4af99703e6c7faf12c5d328dbab346250fd085f7
-git clean -df
-git fetch --depth=1
-
-# Clone video_stream_opencv
-git clone https://github.com/ros-drivers/video_stream_opencv /overlay_ws/src/video_stream_opencv
-cd /overlay_ws/src/video_stream_opencv
-git reset --hard 65949bdc5c9468d18c51aed9073d020bec892532
-git clean -df
-git fetch --depth=1
-
-# Build workspace
-cd /overlay_ws
-catkin build
-
-# Ensure workspace is loaded on container start
-#
-# This updates /opt/env.sh which is executed on container start,
-# this will source the overlay workspace straight after the PAL workspace
-# PAL container
-if [ -f "/opt/pal/gallium/setup.bash" ]; then
-    BASE=pal
-    sed -i '/source \/opt\/pal\/gallium\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
-# Opensource container
-else
-    BASE=oss
-    sed -i '/source \/opt\/tiago_public_ws\/devel\/setup.bash/a source \/overlay_ws\/devel\/setup.bash' /opt/env.sh
-fi
-
-
-##
-## Clean up
-##
-
-# Remove build folder
-rm -r /deps
-
-# Capture build information
-VERSION=0005
-BUILD_DATE=$(date)
-END=$(date +%s.%N)
-DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
-BUILD_TIME=$(date -ud "@$DIFF" +"$(( $DIFF/3600/24 )) days %H hours %M minutes %S seconds")
-echo "RoboCup Container (Version: $VERSION, Bootstrapped from: $BASE, Build date: $BUILD_DATE, Build took: $BUILD_TIME)" >> /.build_info
-
-# Unset variables
-unset PYTHON_VERSION ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO START END BASE BUILD_DATE END DIFF BUILD_TIME 
