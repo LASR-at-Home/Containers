@@ -18,7 +18,7 @@ install_system_packages() {
         python3-numpy python3-opencv python3-testresources python3-empy python3-pykdl \
         libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc \
         build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
-        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev ninja-build
 }
 
 install_python_from_source() {
@@ -81,6 +81,8 @@ setup_gpd() {
   make -j
   make install
 }
+
+
 
 link_python_versions() {
     unlink /usr/bin/python || true
