@@ -72,6 +72,16 @@ setup_overlay_ws() {
 
 }
 
+setup_gpd() {
+  cd /opt/
+  git clone https://github.com/LASR-at-Home/gpd.git
+  cd gpd
+  mkdir build && cd build
+  cmake ..
+  make -j
+  make install
+}
+
 link_python_versions() {
     unlink /usr/bin/python || true
     ln -s /usr/bin/python3.8 /usr/bin/python
@@ -102,5 +112,6 @@ install_python_from_source 3.10.9
 install_global_python_packages
 link_python_versions
 setup_overlay_ws
+setup_gpd
 finalise_build
 
