@@ -99,7 +99,6 @@ install_system_packages
 
 install_python_from_source 3.9.18
 install_python_from_source 3.10.9
-install_python_from_source 3.12.3
 
 install_global_python_packages
 link_python_versions
