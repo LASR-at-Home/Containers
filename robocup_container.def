@@ -93,7 +93,7 @@ link_python_versions() {
 finalise_build() {
     rm -rf /deps
 
-    VERSION=0006
+    VERSION=0007
     BUILD_DATE=$(date)
     END=$(date +%s.%N)
     DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
