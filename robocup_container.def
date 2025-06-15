@@ -78,10 +78,10 @@ link_python_versions() {
     unlink /usr/local/bin/python3 || true
 }
 
-finish() {
+finalise_build() {
     rm -rf /deps
 
-    VERSION=0005
+    VERSION=0006
     BUILD_DATE=$(date)
     END=$(date +%s.%N)
     DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
@@ -102,5 +102,5 @@ install_python_from_source 3.10.9
 install_global_python_packages
 link_python_versions
 setup_overlay_ws
-finish
+finalise_build
 
