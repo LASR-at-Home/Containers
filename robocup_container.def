@@ -18,7 +18,7 @@ install_system_packages() {
         python3-numpy python3-opencv python3-testresources python3-empy python3-pykdl \
         libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc \
         build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
-        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev ninja-build
 }
 
 install_python_from_source() {
@@ -72,6 +72,18 @@ setup_overlay_ws() {
 
 }
 
+setup_gpd() {
+  cd /opt/
+  git clone https://github.com/LASR-at-Home/gpd.git
+  cd gpd
+  mkdir build && cd build
+  cmake ..
+  make -j
+  make install
+}
+
+
+
 link_python_versions() {
     unlink /usr/bin/python || true
     ln -s /usr/bin/python3.8 /usr/bin/python
@@ -81,7 +93,7 @@ link_python_versions() {
 finalise_build() {
     rm -rf /deps
 
-    VERSION=0006
+    VERSION=0007
     BUILD_DATE=$(date)
     END=$(date +%s.%N)
     DIFF=$(printf "%.0f\n" $(echo "$END - $START" | bc))
@@ -102,5 +114,6 @@ install_python_from_source 3.10.9
 install_global_python_packages
 link_python_versions
 setup_overlay_ws
+setup_gpd
 finalise_build
 
