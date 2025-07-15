@@ -18,7 +18,7 @@ install_system_packages() {
         python3-numpy python3-opencv python3-testresources python3-empy python3-pykdl \
         libasound-dev libportaudio2 libportaudiocpp0 portaudio19-dev ffmpeg ca-certificates curl gnupg bc \
         build-essential gdb lcov pkg-config libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
-        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev ninja-build
+        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev lzma lzma-dev tk-dev uuid-dev zlib1g-dev ninja-build ros-noetic-web-video-server 
 }
 
 install_python_from_source() {
@@ -61,7 +61,11 @@ setup_overlay_ws() {
     git clean -df
     git fetch --depth=1
 
+    git clone https://github.com/RobotWebTools/web_video_server.git -b ros1 /overlay_ws/src/web_video_server
+
     cd /overlay_ws
+    rosdep update
+    rosdep install --from-paths src -i -y
     catkin build
 
     if [ -f "/opt/pal/gallium/setup.bash" ]; then
@@ -105,7 +109,6 @@ finalise_build() {
 unset ROS_PACKAGE_PATH ROS_ETC_DIR ROS_ROOT ROS_DISTRO
 
 mkdir /deps
-
 install_system_packages
 
 install_python_from_source 3.9.18
